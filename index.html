@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Vida Plena</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f0e0c;--surface:#1a1916;--surface2:#232220;--border:rgba(255,255,255,0.08);
+  --gold:#c9a84c;--gold2:#e8c97a;--text:#f0ece4;--muted:#8a8578;
+  --green:#4caf7d;--blue:#5b9bd5;--pink:#d4637a;--purple:#9b7fd4;--amber:#d4a03f;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;font-size:14px;}
+h1,h2,h3{font-family:'Playfair Display',serif;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:2rem 1.25rem;display:flex;flex-direction:column;gap:1.5rem;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.brand{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold);}
+.brand span{display:block;font-size:0.7rem;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
+.xp-block{background:var(--surface2);border-radius:12px;padding:1rem;}
+.xp-label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:4px;}
+.xp-level{font-size:1.3rem;font-family:'Playfair Display',serif;color:var(--gold);}
+.xp-sub{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.xp-bar-bg{height:4px;background:rgba(255,255,255,.1);border-radius:2px;}
+.xp-bar{height:4px;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;transition:width .8s ease;}
+.xp-pts{font-size:11px;color:var(--muted);margin-top:4px;}
+.nav-section{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px;}
+nav{display:flex;flex-direction:column;gap:2px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:13px;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:rgba(201,168,76,.12);color:var(--gold);}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.badges-mini{display:flex;flex-wrap:wrap;gap:4px;}
+.badge-mini{font-size:18px;opacity:.25;transition:opacity .4s;}
+.badge-mini.unlocked{opacity:1;}
+.sync-btn{padding:9px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;width:100%;}
+.sync-btn:hover{border-color:var(--gold);color:var(--gold);}
+.sync-status{font-size:10px;color:var(--muted);text-align:center;margin-top:4px;}
+
+/* MAIN */
+.main{padding:2.5rem;overflow-y:auto;}
+.page{display:none;}.page.active{display:block;}
+.page-header{margin-bottom:2rem;}
+.page-title{font-size:1.8rem;color:var(--text);margin-bottom:4px;}
+.page-sub{color:var(--muted);font-size:13px;}
+
+/* API KEY BANNER */
+.api-banner{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.api-banner p{font-size:12px;color:var(--muted);flex:1;line-height:1.5;}
+.api-input{flex:1;min-width:200px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;}
+.api-input:focus{outline:none;border-color:var(--gold);}
+.api-save-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.api-save-btn:hover{background:rgba(201,168,76,.1);}
+
+/* RUEDA */
+.rueda-layout{display:grid;grid-template-columns:300px 1fr;gap:2rem;align-items:start;}
+.areas-grid{display:flex;flex-direction:column;gap:8px;}
+.area-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;transition:border-color .2s;}
+.area-card:hover{border-color:rgba(201,168,76,.3);}
+.area-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.area-color{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.area-name{font-size:13px;font-weight:500;flex:1;}
+.area-score-display{font-size:18px;font-family:'Playfair Display',serif;color:var(--gold);min-width:28px;text-align:right;}
+.area-progress{height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:8px;}
+.area-progress-fill{height:3px;border-radius:2px;transition:width .6s ease;}
+.area-nota{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;resize:none;min-height:48px;transition:border-color .2s;}
+.area-nota:focus{outline:none;border-color:var(--gold);}
+.area-nota::placeholder{color:var(--muted);}
+.eval-btn{margin-top:8px;padding:5px 12px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:transparent;color:var(--gold);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.eval-btn:hover{background:rgba(201,168,76,.1);}
+.eval-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* OBJETIVOS */
+.obj-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:14px;transition:border-color .2s;}
+.obj-card:hover{border-color:rgba(255,255,255,.12);}
+.obj-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.obj-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.obj-title{font-size:14px;font-weight:500;color:var(--text);flex:1;line-height:1.5;}
+.obj-badge{font-size:10px;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;flex-shrink:0;}
+.badge-dream{background:rgba(155,127,212,.15);color:var(--purple);border:1px solid rgba(155,127,212,.3);}
+.badge-progress{background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.3);}
+.badge-done{background:rgba(76,175,125,.12);color:var(--green);border:1px solid rgba(76,175,125,.3);}
+.obj-answer{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:none;min-height:72px;line-height:1.6;transition:border-color .2s;margin-bottom:10px;}
+.obj-answer:focus{outline:none;border-color:var(--gold);}
+.obj-answer::placeholder{color:var(--muted);}
+.chat-area{background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.chat-messages{padding:12px;display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;}
+.msg{max-width:85%;padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.6;}
+.msg-ai{background:var(--surface2);color:var(--text);align-self:flex-start;border-bottom-left-radius:2px;}
+.msg-user{background:rgba(201,168,76,.15);color:var(--gold2);align-self:flex-end;border-bottom-right-radius:2px;}
+.msg-typing{color:var(--muted);font-style:italic;}
+.chat-input-row{display:flex;border-top:1px solid var(--border);}
+.chat-input{flex:1;background:transparent;border:none;padding:10px 12px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;}
+.chat-input:focus{outline:none;}
+.chat-input::placeholder{color:var(--muted);}
+.chat-send{padding:8px 14px;background:transparent;border:none;border-left:1px solid var(--border);color:var(--gold);cursor:pointer;font-size:14px;transition:background .2s;}
+.chat-send:hover{background:rgba(201,168,76,.1);}
+.progress-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.progress-track{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
+.progress-fill{height:5px;border-radius:3px;transition:width .6s ease;}
+.progress-pct{font-size:12px;color:var(--muted);min-width:36px;text-align:right;}
+.xp-tag{font-size:11px;color:var(--gold);font-weight:500;white-space:nowrap;}
+.adjust-row{display:flex;align-items:center;gap:8px;}
+.adjust-label{font-size:11px;color:var(--muted);}
+.adjust-input{width:55px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 6px;font-family:'DM Sans',sans-serif;text-align:center;}
+.adjust-input:focus{outline:none;border-color:var(--gold);}
+.adjust-apply{padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.adjust-apply:hover{border-color:var(--gold);color:var(--gold);}
+
+/* EVOLUCION */
+.evo-filters{display:flex;gap:6px;margin-bottom:1.5rem;}
+.evo-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.evo-btn.active{border-color:var(--gold);color:var(--gold);}
+.insight-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem;}
+.insight-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;}
+.insight-val{font-size:1.5rem;font-family:'Playfair Display',serif;color:var(--gold);}
+.insight-lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--gold);border-radius:12px;padding:12px 20px;color:var(--gold);font-size:13px;transform:translateY(80px);opacity:0;transition:all .4s ease;z-index:999;max-width:320px;line-height:1.5;}
+.toast.show{transform:translateY(0);opacity:1;}
+.celebrate{animation:pop .5s ease;}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">Mi Vida Plena <span>Dashboard personal</span></div>
+    <div class="xp-block">
+      <div class="xp-label">Tu nivel</div>
+      <div class="xp-level" id="lvl-name">Semilla 🌱</div>
+      <div class="xp-sub" id="lvl-sub">Empezando el camino</div>
+      <div class="xp-bar-bg"><div class="xp-bar" id="xp-bar" style="width:0%"></div></div>
+      <div class="xp-pts"><span id="xp-cur">0</span> / <span id="xp-max">300</span> XP</div>
+    </div>
+    <div>
+      <div class="nav-section">Vistas</div>
+      <nav>
+        <button class="nav-item active" onclick="goTo('rueda',this)"><div class="nav-dot" style="background:var(--gold)"></div>Rueda de la vida</button>
+        <button class="nav-item" onclick="goTo('objetivos',this)"><div class="nav-dot" style="background:var(--purple)"></div>Mis objetivos</button>
+        <button class="nav-item" onclick="goTo('evolucion',this)"><div class="nav-dot" style="background:var(--green)"></div>Mi evolución</button>
+      </nav>
+    </div>
+    <div>
+      <div class="nav-section" style="margin-bottom:8px">Logros</div>
+      <div class="badges-mini" id="badges-mini"></div>
+    </div>
+    <div style="margin-top:auto">
+      <button class="sync-btn" onclick="syncSheets()">☁️ Guardar en Sheets</button>
+      <div class="sync-status" id="sync-status">No sincronizado aún</div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- RUEDA -->
+    <div class="page active" id="page-rueda">
+      <div class="page-header">
+        <h1 class="page-title">Rueda de la vida</h1>
+        <p class="page-sub">Escribí cómo estás en cada área. Claude lee lo que escribís y pone el puntaje solo.</p>
+      </div>
+      <div id="api-banner-rueda"></div>
+      <div class="rueda-layout">
+        <canvas id="radarChart" width="290" height="290"></canvas>
+        <div class="areas-grid" id="areas-grid"></div>
+      </div>
+    </div>
+
+    <!-- OBJETIVOS -->
+    <div class="page" id="page-objetivos">
+      <div class="page-header">
+        <h1 class="page-title">Mis objetivos</h1>
+        <p class="page-sub">Respondé cada pregunta. Claude evalúa tu progreso real, te hace preguntas y te da XP.</p>
+      </div>
+      <div id="api-banner-obj"></div>
+      <div id="obj-grid"></div>
+    </div>
+
+    <!-- EVOLUCION -->
+    <div class="page" id="page-evolucion">
+      <div class="page-header">
+        <h1 class="page-title">Mi evolución</h1>
+        <p class="page-sub">Tus puntajes a lo largo del tiempo, jalados directo de tu Google Sheet.</p>
+      </div>
+      <div class="evo-filters">
+        <button class="evo-btn active" onclick="setFilter('mes',this)">Este mes</button>
+        <button class="evo-btn" onclick="setFilter('trimestre',this)">Trimestre</button>
+        <button class="evo-btn" onclick="setFilter('año',this)">Este año</button>
+      </div>
+      <div class="insight-strip">
+        <div class="insight-card"><div class="insight-val" id="ins-avg">—</div><div class="insight-lbl">Promedio general</div></div>
+        <div class="insight-card"><div class="insight-val" id="ins-best">—</div><div class="insight-lbl">Área más fuerte</div></div>
+        <div class="insight-card"><div class="insight-val" id="ins-weak">—</div><div class="insight-lbl">Área a trabajar</div></div>
+      </div>
+      <div class="chart-wrap"><canvas id="lineChart" height="200"></canvas></div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwIWLGTNjd-ohbF7LhLp0UDowUefGw65BTTT4afYYNc2dR07RD7ZgQ4jkKOUuupL4eBTg/exec';
+
+const AREAS = [
+  {key:'salud_mental', name:'Salud mental',         color:'#9b7fd4'},
+  {key:'salud_fisica', name:'Salud física',          color:'#4caf7d'},
+  {key:'finanzas',     name:'Finanzas',              color:'#c9a84c'},
+  {key:'carrera',      name:'Carrera / Propósito',   color:'#5b9bd5'},
+  {key:'relaciones',   name:'Relaciones / Familia',  color:'#d4637a'},
+  {key:'hogar',        name:'Hogar',                 color:'#d4a03f'},
+  {key:'experiencias', name:'Experiencias / Viajes', color:'#5bc4a0'},
+  {key:'crecimiento',  name:'Crecimiento personal',  color:'#a07fd4'},
+  {key:'valores',      name:'Valores / Espiritualidad', color:'#8a8578'},
+  {key:'hobbies',      name:'Diversión / Hobbies',   color:'#d47f5b'},
+];
+
+const OBJETIVOS = [
+  {key:'conservar', icon:'🔮', title:'¿Qué querés conservar y volver a tener de lo que ya habías obtenido?', xp:80},
+  {key:'de_nuevo',  icon:'🔄', title:'¿Qué querés hacer de nuevo?', xp:60},
+  {key:'viajes',    icon:'✈️', title:'¿Qué viajes querés hacer?', xp:70},
+  {key:'valores',   icon:'🧭', title:'¿Qué valores son importantes para vos?', xp:60},
+  {key:'hobbies',   icon:'🎨', title:'¿Qué hobbies querés hacer?', xp:50},
+  {key:'idiomas',   icon:'🗣️', title:'¿Qué idiomas querés aprender o perfeccionar?', xp:60},
+  {key:'fisico',    icon:'💪', title:'¿Cómo querés verte físicamente?', xp:70},
+  {key:'salud',     icon:'🫀', title:'¿Cómo está tu salud?', xp:70},
+  {key:'hogar_obj', icon:'🌅', title:'¿Dónde querés vivir y cómo querés que sea tu hogar?', xp:80},
+  {key:'plata',     icon:'💰', title:'¿Cuánta plata querés guardar y para qué?', xp:80},
+  {key:'familia',   icon:'👨‍👩‍👧', title:'¿Cómo querés conformar tu familia?', xp:80},
+  {key:'red_apoyo', icon:'🤝', title:'¿Cómo está compuesta tu red de apoyo?', xp:60},
+  {key:'puerto',    icon:'⚓', title:'¿Sos un puerto seguro? ¿Tenés puertos seguros?', xp:70},
+];
+
+const BADGES = [
+  {emoji:'🌱',label:'Primer paso', req:xp=>xp>=50},
+  {emoji:'🚀',label:'En camino',   req:xp=>xp>=200},
+  {emoji:'⭐',label:'A mitad',     req:xp=>xp>=400},
+  {emoji:'🔥',label:'Avanzada',    req:xp=>xp>=650},
+  {emoji:'👑',label:'Vida plena',  req:xp=>xp>=900},
+];
+
+const LEVELS = [
+  {name:'Semilla 🌱',  sub:'Empezando el camino',           min:0,   max:300},
+  {name:'Brote 🌿',    sub:'Creciendo con intención',        min:300, max:600},
+  {name:'Árbol 🌳',    sub:'Echando raíces fuertes',         min:600, max:900},
+  {name:'Jardín 🌺',   sub:'Floreciendo en todas las áreas', min:900, max:1200},
+  {name:'Universo ✨', sub:'Vida plena y consciente',        min:1200,max:1500},
+];
+
+let state = {areas:{}, objetivos:{}, apiKey:''};
+let currentFilter = 'mes';
+
+function load() {
+  try { const s = localStorage.getItem('vida_plena_v3'); if(s) state = JSON.parse(s); } catch(e){}
+  AREAS.forEach(a => { if(!state.areas[a.key]) state.areas[a.key] = {score:0, nota:''}; });
+  OBJETIVOS.forEach(o => { if(!state.objetivos[o.key]) state.objetivos[o.key] = {answer:'', progress:0, chat:[]}; });
+}
+
+function save() {
+  localStorage.setItem('vida_plena_v3', JSON.stringify(state));
+  updateXP(); renderRadar(); updateInsights();
+}
+
+// ─── API KEY ─────────────────────────────────────────────
+function apiBannerHTML(id) {
+  if(state.apiKey) return '';
+  return `<div class="api-banner">
+    <p>Para que Claude evalúe necesitás tu API key de Anthropic. <a href="https://console.anthropic.com/keys" target="_blank" style="color:var(--gold)">Obtenerla acá</a> (es gratis para empezar).</p>
+    <input class="api-input" id="ak-${id}" placeholder="sk-ant-..." value="${state.apiKey||''}">
+    <button class="api-save-btn" onclick="saveApiKey('${id}')">Guardar</button>
+  </div>`;
+}
+
+function saveApiKey(id) {
+  const val = document.getElementById('ak-'+id)?.value?.trim();
+  if(!val || !val.startsWith('sk-')) { showToast('La API key debe empezar con sk-ant-...'); return; }
+  state.apiKey = val;
+  save();
+  document.getElementById('api-banner-rueda').innerHTML = '';
+  document.getElementById('api-banner-obj').innerHTML = '';
+  showToast('✅ API key guardada. Ahora Claude puede evaluar.');
+}
+
+// ─── XP ──────────────────────────────────────────────────
+function calcXP() {
+  let xp = 0;
+  OBJETIVOS.forEach(o => { xp += Math.round(state.objetivos[o.key].progress/100*o.xp); });
+  AREAS.forEach(a => { xp += (parseInt(state.areas[a.key].score)||0)*3; });
+  return xp;
+}
+
+function updateXP() {
+  const xp = calcXP();
+  const lv = LEVELS.find(l=>xp>=l.min&&xp<l.max)||LEVELS[LEVELS.length-1];
+  const pct = Math.min(100, Math.round((xp-lv.min)/(lv.max-lv.min)*100));
+  document.getElementById('lvl-name').textContent = lv.name;
+  document.getElementById('lvl-sub').textContent = lv.sub;
+  document.getElementById('xp-bar').style.width = pct+'%';
+  document.getElementById('xp-cur').textContent = xp;
+  document.getElementById('xp-max').textContent = lv.max;
+  const bm = document.getElementById('badges-mini');
+  if(bm) bm.innerHTML = BADGES.map(b=>`<span class="badge-mini ${b.req(xp)?'unlocked':''}" title="${b.label}">${b.emoji}</span>`).join('');
+}
+
+// ─── RUEDA ───────────────────────────────────────────────
+function renderAreas() {
+  document.getElementById('api-banner-rueda').innerHTML = apiBannerHTML('rueda');
+  const grid = document.getElementById('areas-grid');
+  grid.innerHTML = AREAS.map(a => {
+    const d = state.areas[a.key];
+    const score = parseInt(d.score)||0;
+    return `<div class="area-card">
+      <div class="area-top">
+        <div class="area-color" style="background:${a.color}"></div>
+        <span class="area-name">${a.name}</span>
+        <span class="area-score-display" id="as-${a.key}">${score||'—'}</span>
+      </div>
+      <div class="area-progress"><div class="area-progress-fill" id="ap-${a.key}" style="width:${score*10}%;background:${a.color}"></div></div>
+      <textarea class="area-nota" rows="2" placeholder="¿Cómo estás en esta área hoy? Sé honesta..."
+        onblur="setNota('${a.key}',this.value)">${d.nota}</textarea>
+      <button class="eval-btn" id="eb-${a.key}" onclick="evalArea('${a.key}')">✨ Que Claude evalúe</button>
+    </div>`;
+  }).join('');
+}
+
+async function evalArea(key) {
+  if(!state.apiKey) { showToast('Primero guardá tu API key arriba.'); return; }
+  const nota = state.areas[key].nota;
+  if(!nota||nota.trim().length<10) { showToast('Escribí un poco más sobre cómo estás en esta área.'); return; }
+  const btn = document.getElementById('eb-'+key);
+  btn.disabled=true; btn.textContent='Evaluando...';
+  const area = AREAS.find(a=>a.key===key);
+  const resp = await callClaude([{role:'user', content:`Sos un coach de vida empático. El usuario describió cómo está en el área "${area.name}":\n\n"${nota}"\n\n1. Asigná un puntaje del 1 al 10 (sé realista)\n2. Dales feedback breve y cálido (2-3 oraciones)\n\nRespondé SOLO en JSON:\n{"score":7,"feedback":"..."}`}]);
+  btn.disabled=false; btn.textContent='✨ Que Claude evalúe';
+  if(!resp) return;
+  try {
+    const data = JSON.parse(resp.replace(/```json|```/g,'').trim());
+    const score = Math.max(1,Math.min(10,parseInt(data.score)||5));
+    state.areas[key].score = score; save();
+    document.getElementById('as-'+key).textContent = score;
+    document.getElementById('ap-'+key).style.width = (score*10)+'%';
+    showToast(`${area.name}: ${score}/10 — ${data.feedback}`);
+  } catch(e) { showToast('Hubo un error. Intentá de nuevo.'); }
+}
+
+function setNota(key,val) { state.areas[key].nota=val; save(); }
+
+// ─── RADAR ───────────────────────────────────────────────
+let radarChart=null;
+function renderRadar() {
+  const canvas = document.getElementById('radarChart');
+  if(!canvas) return;
+  if(radarChart){radarChart.destroy();radarChart=null;}
+  radarChart = new Chart(canvas, {
+    type:'radar',
+    data:{
+      labels: AREAS.map(a=>a.name.split(' ')[0]),
+      datasets:[{
+        data: AREAS.map(a=>parseInt(state.areas[a.key].score)||0),
+        backgroundColor:'rgba(201,168,76,.12)',borderColor:'#c9a84c',
+        borderWidth:2,pointBackgroundColor:'#c9a84c',pointRadius:4,
+      }]
+    },
+    options:{responsive:false,plugins:{legend:{display:false}},
+      scales:{r:{min:0,max:10,ticks:{stepSize:2,color:'#8a8578',font:{size:10},backdropColor:'transparent'},
+        grid:{color:'rgba(255,255,255,.07)'},angleLines:{color:'rgba(255,255,255,.07)'},
+        pointLabels:{color:'#f0ece4',font:{size:10}}}}}
+  });
+}
+
+// ─── OBJETIVOS ───────────────────────────────────────────
+function renderObjetivos() {
+  document.getElementById('api-banner-obj').innerHTML = apiBannerHTML('obj');
+  document.getElementById('obj-grid').innerHTML = OBJETIVOS.map(o => {
+    const d = state.objetivos[o.key];
+    const p = d.progress||0;
+    const status = p===100?'done':p>0?'progress':'dream';
+    const statusLabel = p===100?'¡Logrado! 🏆':p>0?'En proceso':'Soñando';
+    const color = p===100?'#4caf7d':p>0?'#c9a84c':'#9b7fd4';
+    const chatHtml = (d.chat||[]).map(m=>`<div class="msg msg-${m.role==='assistant'?'ai':'user'}">${m.content}</div>`).join('');
+    return `<div class="obj-card" id="oc-${o.key}">
+      <div class="obj-header">
+        <div class="obj-icon">${o.icon}</div>
+        <div class="obj-title">${o.title}</div>
+        <span class="obj-badge badge-${status}" id="ob-${o.key}">${statusLabel}</span>
+      </div>
+      <textarea class="obj-answer" rows="3" placeholder="Escribí tu respuesta con honestidad y detalle..."
+        id="oa-${o.key}" onblur="setAnswer('${o.key}',this.value)">${d.answer}</textarea>
+      <div class="chat-area" id="chat-${o.key}" ${!chatHtml?'style="display:none"':''}>
+        <div class="chat-messages" id="cm-${o.key}">${chatHtml}</div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="ci-${o.key}" placeholder="Respondé a Claude..."
+            onkeydown="if(event.key==='Enter')sendChat('${o.key}')">
+          <button class="chat-send" onclick="sendChat('${o.key}')">↑</button>
+        </div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill" id="pf-${o.key}" style="width:${p}%;background:${color}"></div></div>
+        <span class="progress-pct" id="pp-${o.key}">${p}%</span>
+        <span class="xp-tag">+${o.xp} XP</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">
+        <button class="eval-btn" onclick="evalObjetivo('${o.key}')">✨ Que Claude evalúe mi progreso</button>
+        <div class="adjust-row">
+          <span class="adjust-label">Ajustar:</span>
+          <input class="adjust-input" type="number" min="0" max="100" value="${p}" id="adj-${o.key}">
+          <button class="adjust-apply" onclick="applyAdjust('${o.key}')">Aplicar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setAnswer(key,val) { state.objetivos[key].answer=val; save(); }
+
+async function evalObjetivo(key) {
+  if(!state.apiKey) { showToast('Primero guardá tu API key.'); return; }
+  const d = state.objetivos[key];
+  if(!d.answer||d.answer.trim().length<15) { showToast('Escribí tu respuesta primero.'); return; }
+  const obj = OBJETIVOS.find(o=>o.key===key);
+  const resp = await callClaude([{role:'user', content:`Sos un coach de vida empático y directo.\n\nPregunta: "${obj.title}"\nRespuesta del usuario: "${d.answer}"\n\n1. Evaluá el progreso real (0-100). 0=solo soñando, 100=totalmente definido y en marcha\n2. Dales feedback cálido pero honesto (2-3 oraciones)\n3. Hacé UNA pregunta poderosa de seguimiento\n\nRespondé SOLO en JSON:\n{"progress":35,"feedback":"...","question":"..."}`}]);
+  if(!resp) return;
+  try {
+    const data = JSON.parse(resp.replace(/```json|```/g,'').trim());
+    const progress = Math.max(0,Math.min(100,parseInt(data.progress)||0));
+    state.objetivos[key].progress = progress;
+    if(!state.objetivos[key].chat) state.objetivos[key].chat=[];
+    state.objetivos[key].chat.push({role:'assistant',content:`${data.feedback}\n\n💬 ${data.question}`});
+    save(); updateProgressUI(key,progress);
+    showChatArea(key);
+    if(progress===100){document.getElementById('oc-'+key).classList.add('celebrate');showToast(`🏆 ¡Logrado! +${obj.xp} XP`);}
+    else showToast(`Progreso: ${progress}%`);
+  } catch(e) { showToast('Error evaluando. Intentá de nuevo.'); }
+}
+
+async function sendChat(key) {
+  if(!state.apiKey) { showToast('Primero guardá tu API key.'); return; }
+  const input = document.getElementById('ci-'+key);
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value='';
+  if(!state.objetivos[key].chat) state.objetivos[key].chat=[];
+  state.objetivos[key].chat.push({role:'user',content:msg});
+  appendMsg(key,'user',msg);
+  const typingId = appendMsg(key,'ai','escribiendo...',true);
+  const obj = OBJETIVOS.find(o=>o.key===key);
+  const d = state.objetivos[key];
+  const messages = [
+    {role:'user',content:`Sos un coach de vida. Objetivo: "${obj.title}". Respuesta inicial: "${d.answer}". Progreso actual: ${d.progress}%. Seguí la conversación de forma cálida y ayudá a profundizar. Al final de cada respuesta actualizá el progreso implícito.`},
+    ...d.chat.map(m=>({role:m.role==='assistant'?'assistant':'user',content:m.content}))
+  ];
+  const resp = await callClaude(messages);
+  document.getElementById(typingId)?.remove();
+  if(resp) {
+    state.objetivos[key].chat.push({role:'assistant',content:resp});
+    appendMsg(key,'ai',resp);
+    // silently re-eval progress
+    const evalResp = await callClaude([{role:'user',content:`Basándote en esta conversación sobre "${obj.title}", respondé SOLO con un número entero del 0 al 100 indicando el progreso real del usuario:\n\n${d.chat.map(m=>`${m.role==='user'?'Usuario':'Coach'}: ${m.content}`).join('\n')}`}]);
+    if(evalResp) {
+      const p = Math.max(0,Math.min(100,parseInt(evalResp.replace(/\D/g,''))||d.progress));
+      state.objetivos[key].progress=p; save(); updateProgressUI(key,p);
+    }
+  }
+  save(); scrollChat(key);
+}
+
+function appendMsg(key,role,content,typing=false) {
+  const cm = document.getElementById('cm-'+key);
+  if(!cm) return null;
+  const id='msg-'+Date.now()+Math.random();
+  const div=document.createElement('div');
+  div.className=`msg msg-${role==='ai'?'ai':'user'}${typing?' msg-typing':''}`;
+  div.id=id; div.textContent=content;
+  cm.appendChild(div); cm.scrollTop=cm.scrollHeight;
+  return id;
+}
+
+function showChatArea(key) {
+  const ca=document.getElementById('chat-'+key);
+  if(ca){ca.style.display='block';}
+  const cm=document.getElementById('cm-'+key);
+  if(cm){
+    const chat=state.objetivos[key].chat||[];
+    cm.innerHTML=chat.map(m=>`<div class="msg msg-${m.role==='assistant'?'ai':'user'}">${m.content}</div>`).join('');
+    cm.scrollTop=cm.scrollHeight;
+  }
+}
+
+function scrollChat(key){const cm=document.getElementById('cm-'+key);if(cm)cm.scrollTop=cm.scrollHeight;}
+
+function updateProgressUI(key,p) {
+  const color=p===100?'#4caf7d':p>0?'#c9a84c':'#9b7fd4';
+  const pf=document.getElementById('pf-'+key);
+  const pp=document.getElementById('pp-'+key);
+  const ob=document.getElementById('ob-'+key);
+  const adj=document.getElementById('adj-'+key);
+  if(pf){pf.style.width=p+'%';pf.style.background=color;}
+  if(pp)pp.textContent=p+'%';
+  if(adj)adj.value=p;
+  if(ob){
+    ob.className=`obj-badge badge-${p===100?'done':p>0?'progress':'dream'}`;
+    ob.textContent=p===100?'¡Logrado! 🏆':p>0?'En proceso':'Soñando';
+  }
+}
+
+function applyAdjust(key) {
+  const val=Math.max(0,Math.min(100,parseInt(document.getElementById('adj-'+key).value)||0));
+  state.objetivos[key].progress=val; save(); updateProgressUI(key,val);
+  showToast(`Progreso ajustado a ${val}%`);
+}
+
+// ─── EVOLUCION ───────────────────────────────────────────
+function updateInsights() {
+  const scores=AREAS.map(a=>parseInt(state.areas[a.key].score)||0);
+  const filled=scores.filter(s=>s>0);
+  if(!filled.length) return;
+  const avg=(filled.reduce((a,b)=>a+b,0)/filled.length).toFixed(1);
+  const maxI=scores.indexOf(Math.max(...scores));
+  const minI=scores.indexOf(Math.min(...scores));
+  const ia=document.getElementById('ins-avg');if(ia)ia.textContent=avg;
+  const ib=document.getElementById('ins-best');if(ib)ib.textContent=AREAS[maxI].name.split(' ')[0];
+  const iw=document.getElementById('ins-weak');if(iw)iw.textContent=AREAS[minI].name.split(' ')[0];
+}
+
+let lineChart=null;
+async function renderLine() {
+  const canvas=document.getElementById('lineChart');
+  if(!canvas) return;
+  if(lineChart){lineChart.destroy();lineChart=null;}
+
+  // Fetch real data from Sheets
+  let sheetRows = [];
+  try {
+    const r = await fetch(SHEET_URL+'?action=getHistory');
+    const d = await r.json();
+    if(d.rows) sheetRows = d.rows;
+  } catch(e) {}
+
+  let labels, datasets;
+  if(sheetRows.length > 0) {
+    // Group by date, build real lines
+    const dates = [...new Set(sheetRows.map(r=>r[0]))].slice(-6);
+    labels = dates;
+    datasets = AREAS.slice(0,6).map(a => ({
+      label: a.name.split('/')[0].trim(),
+      data: dates.map(d => {
+        const row = sheetRows.find(r=>r[0]===d && r[1]===a.name);
+        return row ? parseFloat(row[2]) : null;
+      }),
+      borderColor:a.color, backgroundColor:'transparent',
+      tension:0.4, pointRadius:3, borderWidth:1.5, spanGaps:true,
+    }));
+  } else {
+    // Fallback: use current scores as "today"
+    labels = ['Hoy'];
+    datasets = AREAS.map(a => ({
+      label: a.name.split('/')[0].trim(),
+      data: [parseInt(state.areas[a.key].score)||0],
+      borderColor:a.color, backgroundColor:'transparent',
+      tension:0.4, pointRadius:5, borderWidth:1.5,
+    }));
+  }
+
+  lineChart = new Chart(canvas, {
+    type:'line', data:{labels, datasets},
+    options:{responsive:true,
+      plugins:{legend:{labels:{color:'#8a8578',font:{size:11},boxWidth:10}}},
+      scales:{
+        x:{ticks:{color:'#8a8578',font:{size:11}},grid:{color:'rgba(255,255,255,.05)'}},
+        y:{min:0,max:10,ticks:{color:'#8a8578',font:{size:11},stepSize:2},grid:{color:'rgba(255,255,255,.05)'}}
+      }}
+  });
+}
+
+function setFilter(f,btn) {
+  currentFilter=f;
+  document.querySelectorAll('.evo-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLine();
+}
+
+// ─── SHEETS SYNC ─────────────────────────────────────────
+async function syncSheets() {
+  const btn = document.querySelector('.sync-btn');
+  btn.textContent = '⏳ Guardando...';
+  const payload = {
+    areas: AREAS.map(a=>({area:a.name, puntaje:state.areas[a.key].score, nota:state.areas[a.key].nota})),
+    objetivos: OBJETIVOS.map(o=>({pregunta:o.title, respuesta:state.objetivos[o.key].answer, progreso:state.objetivos[o.key].progress})),
+  };
+  try {
+    const r = await fetch(SHEET_URL, {method:'POST', body:JSON.stringify(payload)});
+    const d = await r.json();
+    if(d.ok) {
+      showToast('✅ Guardado en Google Sheets');
+      document.getElementById('sync-status').textContent = 'Guardado — '+new Date().toLocaleDateString('es');
+    } else { showToast('⚠️ Error al guardar: '+JSON.stringify(d)); }
+  } catch(e) { showToast('⚠️ No se pudo conectar con Sheets.'); }
+  btn.textContent = '☁️ Guardar en Sheets';
+}
+
+// ─── API CLAUDE ──────────────────────────────────────────
+async function callClaude(messages) {
+  if(!state.apiKey) { showToast('Necesitás guardar tu API key primero.'); return null; }
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':state.apiKey,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages})
+    });
+    const d = await r.json();
+    if(d.error) { showToast('Error API: '+d.error.message); return null; }
+    return d.content?.[0]?.text||null;
+  } catch(e) { showToast('Error de conexión.'); return null; }
+}
+
+// ─── NAV ─────────────────────────────────────────────────
+function goTo(page,btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  btn.classList.add('active');
+  if(page==='evolucion'){updateInsights();renderLine();}
+}
+
+// ─── TOAST ───────────────────────────────────────────────
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),4500);
+}
+
+// ─── INIT ────────────────────────────────────────────────
+load(); renderAreas(); renderObjetivos(); renderRadar(); updateXP(); updateInsights();
+</script>
+</body>
+</html>
