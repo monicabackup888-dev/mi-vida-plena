@@ -217,4 +217,153 @@ const LEVELS=[
 ];
 let state={areas:{},objetivos:{}};
 function load(){
-  try{const s=localStorage.getItem('vida_plena_v4');if(s)state=JSON.parse(s);}catch(e){
+  try{const s=localStorage.getItem('vida_plena_v4');if(s)state=JSON.parse(s);}catch(e){}
+  AREAS.forEach(a=>{if(!state.areas[a.key])state.areas[a.key]={score:5,nota:''};});
+  OBJETIVOS.forEach(o=>{if(!state.objetivos[o.key])state.objetivos[o.key]={answer:'',progress:0};});
+}
+function save(){localStorage.setItem('vida_plena_v4',JSON.stringify(state));updateXP();renderRadar();updateInsights();}
+function calcXP(){
+  let xp=0;
+  OBJETIVOS.forEach(o=>{xp+=Math.round(state.objetivos[o.key].progress/100*o.xp);});
+  AREAS.forEach(a=>{xp+=(parseInt(state.areas[a.key].score)||0)*3;});
+  return xp;
+}
+function updateXP(){
+  const xp=calcXP();
+  const lv=LEVELS.find(l=>xp>=l.min&&xp<l.max)||LEVELS[LEVELS.length-1];
+  const pct=Math.min(100,Math.round((xp-lv.min)/(lv.max-lv.min)*100));
+  document.getElementById('lvl-name').textContent=lv.name;
+  document.getElementById('lvl-sub').textContent=lv.sub;
+  document.getElementById('xp-bar').style.width=pct+'%';
+  document.getElementById('xp-cur').textContent=xp;
+  document.getElementById('xp-max').textContent=lv.max;
+  const bm=document.getElementById('badges-mini');
+  if(bm)bm.innerHTML=BADGES.map(b=>`<span class="badge-mini ${b.req(xp)?'unlocked':''}" title="${b.label}">${b.emoji}</span>`).join('');
+}
+function renderAreas(){
+  document.getElementById('areas-grid').innerHTML=AREAS.map(a=>{
+    const d=state.areas[a.key];
+    const score=parseInt(d.score)||5;
+    return `<div class="area-card">
+      <div class="area-top">
+        <div class="area-color" style="background:${a.color}"></div>
+        <span class="area-name">${a.name}</span>
+        <input type="number" min="1" max="10" value="${score}" style="width:44px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;text-align:center;padding:3px;font-family:'DM Sans',sans-serif;" onchange="setScore('${a.key}',this.value)">
+      </div>
+      <div class="area-progress"><div class="area-progress-fill" id="ap-${a.key}" style="width:${score*10}%;background:${a.color}"></div></div>
+      <textarea class="area-nota" rows="2" placeholder="¿Cómo estás en esta área hoy?" onblur="setNota('${a.key}',this.value)">${d.nota}</textarea>
+    </div>`;
+  }).join('');
+}
+function setScore(key,val){
+  val=Math.max(1,Math.min(10,parseInt(val)||1));
+  state.areas[key].score=val;
+  const bar=document.getElementById('ap-'+key);
+  if(bar)bar.style.width=(val*10)+'%';
+  save();
+}
+function setNota(key,val){state.areas[key].nota=val;save();}
+let radarChart=null;
+function renderRadar(){
+  const canvas=document.getElementById('radarChart');
+  if(!canvas)return;
+  if(radarChart){radarChart.destroy();radarChart=null;}
+  radarChart=new Chart(canvas,{
+    type:'radar',
+    data:{
+      labels:AREAS.map(a=>a.name.split(' ')[0]),
+      datasets:[{data:AREAS.map(a=>parseInt(state.areas[a.key].score)||0),backgroundColor:'rgba(201,168,76,.12)',borderColor:'#c9a84c',borderWidth:2,pointBackgroundColor:'#c9a84c',pointRadius:4}]
+    },
+    options:{responsive:false,plugins:{legend:{display:false}},scales:{r:{min:0,max:10,ticks:{stepSize:2,color:'#8a8578',font:{size:10},backdropColor:'transparent'},grid:{color:'rgba(255,255,255,.07)'},angleLines:{color:'rgba(255,255,255,.07)'},pointLabels:{color:'#f0ece4',font:{size:10}}}}}
+  });
+}
+function renderObjetivos(){
+  document.getElementById('obj-grid').innerHTML=OBJETIVOS.map(o=>{
+    const d=state.objetivos[o.key];
+    const p=d.progress||0;
+    const status=p===100?'done':p>0?'progress':'dream';
+    const statusLabel=p===100?'¡Logrado! 🏆':p>0?'En proceso':'Soñando';
+    const color=p===100?'#4caf7d':p>0?'#c9a84c':'#9b7fd4';
+    return `<div class="obj-card" id="oc-${o.key}">
+      <div class="obj-header">
+        <div class="obj-icon">${o.icon}</div>
+        <div class="obj-title">${o.title}</div>
+        <span class="obj-badge badge-${status}" id="ob-${o.key}">${statusLabel}</span>
+      </div>
+      <textarea class="obj-answer" rows="3" placeholder="Escribí tu respuesta acá..." id="oa-${o.key}" onblur="setAnswer('${o.key}',this.value)">${d.answer}</textarea>
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill" id="pf-${o.key}" style="width:${p}%;background:${color}"></div></div>
+        <span class="progress-pct" id="pp-${o.key}">${p}%</span>
+        <span class="xp-tag">+${o.xp} XP</span>
+      </div>
+      <div class="adjust-row">
+        <span class="adjust-label">Mi progreso:</span>
+        <input class="adjust-input" type="number" min="0" max="100" value="${p}" id="adj-${o.key}">
+        <button class="adjust-apply" onclick="applyAdjust('${o.key}')">Aplicar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function setAnswer(key,val){state.objetivos[key].answer=val;save();}
+function applyAdjust(key){
+  const val=Math.max(0,Math.min(100,parseInt(document.getElementById('adj-'+key).value)||0));
+  state.objetivos[key].progress=val;save();
+  const color=val===100?'#4caf7d':val>0?'#c9a84c':'#9b7fd4';
+  const pf=document.getElementById('pf-'+key);if(pf){pf.style.width=val+'%';pf.style.background=color;}
+  const pp=document.getElementById('pp-'+key);if(pp)pp.textContent=val+'%';
+  const ob=document.getElementById('ob-'+key);
+  if(ob){ob.className=`obj-badge badge-${val===100?'done':val>0?'progress':'dream'}`;ob.textContent=val===100?'¡Logrado! 🏆':val>0?'En proceso':'Soñando';}
+  if(val===100){document.getElementById('oc-'+key).classList.add('celebrate');showToast('🏆 ¡Logrado! +'+OBJETIVOS.find(o=>o.key===key).xp+' XP');}
+  else showToast('Progreso guardado: '+val+'%');
+}
+function updateInsights(){
+  const scores=AREAS.map(a=>parseInt(state.areas[a.key].score)||0);
+  const filled=scores.filter(s=>s>0);if(!filled.length)return;
+  const avg=(filled.reduce((a,b)=>a+b,0)/filled.length).toFixed(1);
+  const maxI=scores.indexOf(Math.max(...scores));
+  const minI=scores.indexOf(Math.min(...scores));
+  const ia=document.getElementById('ins-avg');if(ia)ia.textContent=avg;
+  const ib=document.getElementById('ins-best');if(ib)ib.textContent=AREAS[maxI].name.split(' ')[0];
+  const iw=document.getElementById('ins-weak');if(iw)iw.textContent=AREAS[minI].name.split(' ')[0];
+}
+let lineChart=null;
+async function renderLine(){
+  const canvas=document.getElementById('lineChart');
+  if(!canvas)return;
+  if(lineChart){lineChart.destroy();lineChart=null;}
+  let sheetRows=[];
+  try{const r=await fetch(SHEET_URL+'?action=getHistory');const d=await r.json();if(d.rows)sheetRows=d.rows;}catch(e){}
+  let labels,datasets;
+  if(sheetRows.length>0){
+    const dates=[...new Set(sheetRows.map(r=>r.fecha))].slice(-6);
+    labels=dates;
+    datasets=AREAS.slice(0,6).map(a=>({label:a.name.split('/')[0].trim(),data:dates.map(d=>{const row=sheetRows.find(r=>r.fecha===d&&r.area===a.name);return row?parseFloat(row.puntaje):null;}),borderColor:a.color,backgroundColor:'transparent',tension:0.4,pointRadius:3,borderWidth:1.5,spanGaps:true}));
+  }else{
+    labels=['Hoy'];
+    datasets=AREAS.map(a=>({label:a.name.split('/')[0].trim(),data:[parseInt(state.areas[a.key].score)||0],borderColor:a.color,backgroundColor:'transparent',tension:0.4,pointRadius:5,borderWidth:1.5}));
+  }
+  lineChart=new Chart(canvas,{type:'line',data:{labels,datasets},options:{responsive:true,plugins:{legend:{labels:{color:'#8a8578',font:{size:11},boxWidth:10}}},scales:{x:{ticks:{color:'#8a8578',font:{size:11}},grid:{color:'rgba(255,255,255,.05)'}},y:{min:0,max:10,ticks:{color:'#8a8578',font:{size:11},stepSize:2},grid:{color:'rgba(255,255,255,.05)'}}}}}); 
+}
+function setFilter(f,btn){document.querySelectorAll('.evo-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLine();}
+async function syncSheets(){
+  const btn=document.querySelector('.sync-btn');btn.textContent='⏳ Guardando...';
+  const payload={areas:AREAS.map(a=>({area:a.name,puntaje:state.areas[a.key].score,nota:state.areas[a.key].nota})),objetivos:OBJETIVOS.map(o=>({pregunta:o.title,respuesta:state.objetivos[o.key].answer,progreso:state.objetivos[o.key].progress}))};
+  try{
+    const r=await fetch(SHEET_URL,{method:'POST',body:JSON.stringify(payload)});
+    const d=await r.json();
+    if(d.ok){showToast('✅ Guardado en Google Sheets');document.getElementById('sync-status').textContent='Guardado — '+new Date().toLocaleDateString('es');}
+    else showToast('⚠️ Error: '+JSON.stringify(d));
+  }catch(e){showToast('⚠️ No se pudo conectar con Sheets.');}
+  btn.textContent='☁️ Guardar en Sheets';
+}
+function goTo(page,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');btn.classList.add('active');
+  if(page==='evolucion'){updateInsights();renderLine();}
+}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4500);}
+load();renderAreas();renderObjetivos();renderRadar();updateXP();updateInsights();
+</script>
+</body>
+</html>
